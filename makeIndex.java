@@ -1,16 +1,16 @@
 /*
 Arguments:
 			DATA_PATH(String): the file path of Gowalla_totalCheckins.txt
-			INDEX_PATH(String): the output file path of the grid index
+			INDEX_PATH(String): the output file path of the Gri index
 			DATA_PATH_NEW(String): the file path of the dataset without duplicates
-  			N(integer): the grid index size
+  			N(integer): the Gri index size
 
 /Users/alog1024/Desktop/courses/y4 sem2/Adv DB/Assignment 3/Gowalla_totalCheckins.txt
 /Users/alog1024/Desktop/courses/y4 sem2/Adv DB/Assignment 3/index_path
 /Users/alog1024/Desktop/courses/y4 sem2/Adv DB/Assignment 3/loc.txt
 100
 
-java makeIndex /Users/alog1024/Desktop/Gowalla_totalCheckins.txt /Users/alog1024/Desktop/index_path /Users/alog1024/Desktop/loc.txt 100
+java makeIndex /Users/alog1024/Desktop/Gowalla_totalCheckins.txt /Users/alog1024/Desktop/index.txt /Users/alog1024/Desktop/loc.txt 10
 
 */
 
@@ -18,7 +18,7 @@ java makeIndex /Users/alog1024/Desktop/Gowalla_totalCheckins.txt /Users/alog1024
 import java.util.*;
 import java.io.*;
 
-class Point {
+class Pnt {
 	private int id;
 	private double x;
 	private double y;
@@ -32,7 +32,7 @@ class Point {
 	 * @param x: x-axis
 	 * @param y: y-axis
 	 */
-	public Point(int id, double x, double y) {
+	public Pnt(int id, double x, double y) {
 		this.id = id;
 		this.x = round(x, 1);
 		this.y = round(y, 1);
@@ -47,47 +47,47 @@ class Point {
 	}
 }
 
-class Grid{
+class Gri{
 	public int x;
 	public int y;
-	private List<Point> points = new ArrayList<Point>();
+	private List<Pnt> Pnts = new ArrayList<Pnt>();
 	/**
 	 * Default Constructor
 	 */
-	public Grid() {
+	public Gri() {
 
 	}
 	/**
 	 * @param x,y: the index of 2D matrix
 	 */
-	public Grid(int x, int y) {
+	public Gri(int x, int y) {
 		this.x = x;
 		this.y = y;
 	}
 
 	/**
-	 * Append a point (x,y) to the grid
+	 * Append a Pnt (x,y) to the Gri
 	 * @param x: x-axis
 	 * @param y: y-axis
 	 */
-	public void appendPoint(int id, double x, double y) {
-		Point newPoint = new Point(id, x, y);
-		this.appendPoint(newPoint);
+	public void appendPnt(int id, double x, double y) {
+		Pnt newPnt = new Pnt(id, x, y);
+		this.appendPnt(newPnt);
 	}
 
 	/**
-	 * Append a point instance to the grid
-	 * @param point: a new point
+	 * Append a Pnt instance to the Gri
+	 * @param Pnt: a new Pnt
 	 */
-	public void appendPoint(Point point) {
-		if(points.contains(point))
-			System.out.println("This point " + point.toString() + " already exsits!!");
+	public void appendPnt(Pnt Pnt) {
+		if(Pnts.contains(Pnt))
+			System.out.println("This Pnt " + Pnt.toString() + " already exsits!!");
 		else
-			points.add(point);
+			Pnts.add(Pnt);
 	}
 
-	public List<Point> getPoints(){
-		return this.points;
+	public List<Pnt> getPnts(){
+		return this.Pnts;
 	}
 
 }
@@ -186,9 +186,9 @@ public class makeIndex {
 	}
 
 	public static void create_index(String data_path_new, String index_path, int n){
-		// To create a grid index and save it to file on "index_path".
+		// To create a Gri index and save it to file on "index_path".
 		// The output file should contain exactly n*n lines. 
-		// If there is no point in the cell, just leave it empty after ":".
+		// If there is no Pnt in the cell, just leave it empty after ":".
 		System.out.println("Calling create_index!");
 		List<Double> xs = new ArrayList<>();
 		List<Double> ys = new ArrayList<>();
@@ -207,49 +207,48 @@ public class makeIndex {
 			}
 		} catch (IOException ex) {}
 		System.out.println("File read!");
+
 		// find max box
 		double x_min = round(Collections.min(xs), 1);
 		double x_max = round(Collections.max(xs), 1);
 		double y_min = round(Collections.min(ys), 1);
 		double y_max = round(Collections.max(ys), 1);
 		
-		// create grid index
+		// create Gri index
 		double cell_x = (x_max - x_min) / n;
 		double cell_y = (y_max - y_min) / n;
-		System.out.println(cell_x);
-		System.out.println(cell_y);
 
-		List<Grid> gridIndex = new ArrayList<>();
-		/* initialize empty grid index */
+		List<Gri> GriIndex = new ArrayList<>();
+		/* initialize empty Gri index */
 		for(int i = 0; i < n; i++){
 			for(int j = 0; j < n; j++){
-				Grid grid = new Grid(i, j);
-				gridIndex.add(grid);
+				Gri Gri = new Gri(i, j);
+				GriIndex.add(Gri);
 			}
 		}
 
-		/* add points to grid index */
+		/* add Pnts to Gri index */
 		for(String line: lines){
 			String[] col = line.split("\t");
 			double x = Double.parseDouble(col[0]);
 			double y = Double.parseDouble(col[1]);
 			int id = Integer.parseInt(col[2]);
-			Point p = new Point(id, x, y);
+			Pnt p = new Pnt(id, x, y);
 			int x_idx = get_1d_index(x, x_min, cell_x);
 			int y_idx = get_1d_index(y, y_min, cell_y);
-			gridIndex.get(x_idx * n + y_idx).appendPoint(p);
+			GriIndex.get(x_idx * n + y_idx).appendPnt(p);
 		}
+		System.out.println("Gri Index created!");
 
-		// write grid index to index_path
-		
+		// write Gri index to index_path
 		try {
 			FileWriter fileWriter = new FileWriter(index_path); 
 			try (BufferedWriter writer = new BufferedWriter(fileWriter)) {
 				for(int i = 0; i < n; i++){
 					for(int j = 0; j < n; j++){
 						writer.write(i + "," + j + ":");
-						Grid grid = gridIndex.get(i * n + j);
-						for (Point p : grid.getPoints()){
+						Gri Gri = GriIndex.get(i * n + j);
+						for (Pnt p : Gri.getPnts()){
 							writer.write(" ");
 							writer.write(p.toString());
 						}
@@ -267,16 +266,15 @@ public class makeIndex {
 			System.out.println("Usage: java makeIndex DATA_PATH INDEX_PATH DATA_PATH_NEW N");
 			/*
 			DATA_PATH(String): the file path of Gowalla_totalCheckins.txt
-			INDEX_PATH(String): the output file path of the grid index
+			INDEX_PATH(String): the output file path of the Gri index
 			DATA_PATH_NEW(String): the file path of the dataset without duplicates
-  			N(integer): the grid index size
+  			N(integer): the Gri index size
 			*/
 			return;
 		}
 		duplicate_elimination(args[0], args[2]);
 		long s = System.currentTimeMillis();
-		create_index(args[2], args[1], Integer.parseInt(args[3]));
-		//create_index(args[2], args[1], args[3]);
+		create_index(args[2], args[1], Integer.parseInt(args[3])); //create_index(args[2], args[1], args[3]);
 		long t = System.currentTimeMillis();
 		System.out.println("Index construction time: "+(t-s));
 	}
