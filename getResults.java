@@ -2,7 +2,7 @@ import java.util.*;
 import java.io.*;
 
 class Point {
-	private int id;
+	public int id;
 	private double x;
 	private double y;
 
@@ -45,6 +45,26 @@ class Point {
 		return Math.sqrt(xd * xd + yd * yd);
 	}
 
+}
+
+class Neighbor implements Comparable<Neighbor>{
+	public double dist;
+	public Point point;
+
+	public Neighbor(double d, Point p){
+		this.dist = d;
+		this.point = p;
+	}
+
+	public int compareTo(Neighbor n){
+		if (this.dist == n.dist){
+			return 0;
+		}
+		else if (this.dist > n.dist) {
+			return 1;
+		}
+		return -1;
+	}
 }
 
 class Grid{
@@ -90,6 +110,17 @@ class Grid{
 		return this.points;
 	}
 
+	public double dlow(double x, double y, double g_xmin, double g_ymin, double cell_x, double cell_y){
+		double x_min = g_xmin + this.x * cell_x;
+		double x_max = x_min + cell_x;
+		double y_min = g_ymin + this.y * cell_y;
+		double y_max = y_min + cell_y;
+
+		double dx =  Math.max(Math.max(x_min - x, 0), x - x_max);	/* max(x_min - x, 0, x - x_max) */
+		double dy =  Math.max(Math.max(y_min - y, 0), y - y_max);	/* max(y_min - y, 0, y - y_max) */
+		return Math.sqrt(dx * dx + dy * dy);
+	}
+
 }
 
 class GridIndex{
@@ -113,6 +144,10 @@ class GridIndex{
 		this.grids = grids;
 	}
 
+	/**
+	 * Find the grid for a location
+	 * @param (x,y): location longitude and latitude
+	 */	
 	public Grid get_grid(double x, double y){
 		int x_idx = 1;
 		int y_idx = 1;
@@ -127,9 +162,36 @@ class GridIndex{
 		return this.grids[x_idx][y_idx];
 	}
 
+	/**
+	 * Find the layer of grids k grids from a grid
+	 */
+	public List<Grid> get_layer(int i, int j, int k){
+		List<Grid> layer = new ArrayList<Grid>();
+		if(k == 0){
+			layer.add(this.grids[i][j]);
+			return layer;
+		}
+		if(j+k <  n){ layer.add(this.grids[i][j+k]); }
+		if(j-k >= 0){ layer.add(this.grids[i][j-k]); }
+		if(i+k <  n){ layer.add(this.grids[i+k][j]); }
+		if(i-k >= 0){ layer.add(this.grids[i-k][j]); }
+		for(int a = 0; a < k; a++){
+			if(i-a >= 0 && j+k < n){ layer.add(this.grids[i-a][j+k]); }
+			if(i+a <  n && j+k < n){ layer.add(this.grids[i+a][j+k]); }
+			if(j-a >= 0 && i+k < n){ layer.add(this.grids[i+k][j-a]); }
+			if(j+a <  n && i+k < n){ layer.add(this.grids[i+k][j+a]); }
+		}
+		if(i-k >= 0 && j+k < n){ layer.add(this.grids[i-k][j+k]); }
+		if(i+k <  n && j+k < n){ layer.add(this.grids[i+k][j+k]); }
+		if(j-k >= 0 && i+k < n){ layer.add(this.grids[i+k][j-k]); }
+		if(j+k <  n && i+k < n){ layer.add(this.grids[i+k][j+k]); }
+		return layer;
+	}  
+
 }
 
 public class getResults{
+
 	public static String knn_grid(double x, double y, String index_path, int k, int n){
 		System.out.println("Calling getResults!");
 		// define Grid parameters 
@@ -168,15 +230,47 @@ public class getResults{
 		System.out.println("Grit index loaded!");
 
 		// get the k-NN result with the help of the grid index
-		
-
-
-
-
+		List<Neighbor> queue = new ArrayList<Neighbor>();
+		double t = Math.sqrt((x_max-x_min) * (x_max-x_min) + (y_max-y_min) * (y_max-y_min));
+		Grid grid = grid_index.get_grid(x, y);
+		int layer_count = 0;
+		boolean pruned = false;
+		while((layer_count < n-1) && (!pruned)){
+			List<Grid> layer = grid_index.get_layer(grid.x, grid.y, layer_count);
+			int prune = 0;
+			for(Grid g: layer){
+				double dlow = g.dlow(x, y, x_min, y_min, cell_x, cell_y);
+				if (dlow > t){
+					prune += 1;
+				}else{
+					List<Point> points = g.getPoints();
+					for (Point p: points){
+						double d = p.dist(x, y);
+						if (d < t){
+							Neighbor nb = new Neighbor(d, p);
+							queue.add(nb);
+							Collections.sort(queue);
+							if (queue.size() > 0){
+								t = queue.get(Math.min(queue.size()-1, k-1)).dist;
+							}
+						}
+					}
+				}
+			}
+			if (prune == layer.size()){
+				pruned = true;
+			}
+			layer_count += 1;
+		}
 		
 		// store the k-NN results by a String of location ids, like "11, 789, 125, 2, 771"
-		return "";
-	
+		String ret = "" + queue.get(0).point.id;
+		for(int i = 1; i < k; i++){
+			Neighbor nb = queue.get(i);
+			ret = ret + ", " + nb.point.id;
+		}
+		System.out.println("k-NN computed!");
+		return ret;	
 	}
 
 
