@@ -5,11 +5,6 @@ class Point {
 	public int id;
 	private double x;
 	private double y;
-
-	public static double round(double num, int precision){
-		double scale = Math.pow(10, precision);
-		return (double) Math.round(num * scale) / scale;
-	}
 	 
 	/**
 	 * @param x: x-axis
@@ -17,8 +12,8 @@ class Point {
 	 */
 	public Point(int id, double x, double y) {
 		this.id = id;
-		this.x = round(x, 1);
-		this.y = round(y, 1);
+		this.x = x;
+		this.y = y;
 	}
 
 	public Point(String s) {
@@ -196,10 +191,11 @@ public class getResults{
 		System.out.println("Calling getResults!");
 		// define Grid parameters 
 		/* max box */
+
 		double x_min = -90.0;
-		double x_max = 405.7;
-		double y_min = -176.3;
-		double y_max = 177.5;
+		double x_max = 90.0;
+		double y_min = -176.30859375;
+		double y_max = 177.462490797;
 		/* cell size */
 		double cell_x = (x_max - x_min) / n;
 		double cell_y = (y_max - y_min) / n;
@@ -220,7 +216,7 @@ public class getResults{
 					String[] points_str = p_str.split(" ");
 					for(String s: points_str){
 						Point p = new Point(s);
-						grid.appendPoint(p);			/* add points to grid */
+						grid.appendPoint(p);	/* add points to grid */
 					}
 					grids[i][j] = grid;			/* add grid to grid index */
 				}
@@ -269,16 +265,44 @@ public class getResults{
 			Neighbor nb = queue.get(i);
 			ret = ret + ", " + nb.point.id;
 		}
-		System.out.println("k-NN computed!");
+		System.out.println("k-NN computed by grid_index!");
 		return ret;	
 	}
 
 
 	public static String knn_linear_scan(double x, double y, String data_path_new, int k){
+		System.out.println("Calling knn_linear_scan!");
 		// to get the k-NN result by linear scan
-		// Please store the k-NN results by a String of location ids, like "11, 789, 125, 2, 771"
+		List<Neighbor> queue = new ArrayList<Neighbor>();
+		// read data, scan line by line
+		try {
+			FileReader fileReader = new FileReader(data_path_new); 
+			try (BufferedReader reader = new BufferedReader(fileReader)) {
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					String[] col = line.split("\t");
+					double px = Double.parseDouble(col[0]);
+					double py = Double.parseDouble(col[1]);
+					int id = Integer.parseInt(col[2]);
+					Point p = new Point(id, px, py);
+					double d = p.dist(x, y);
+					Neighbor nb = new Neighbor(d, p);
+					queue.add(nb);
+				}
+			}
+		} catch (IOException ex) {}
+		Collections.sort(queue);
+		System.out.println("File read!");
+		System.out.println("Data scanned!");
 
-		return "";
+		// store the k-NN results by a String of location ids, like "11, 789, 125, 2, 771"
+		String ret = "" + queue.get(0).point.id;
+		for(int i = 1; i < k; i++){
+			Neighbor nb = queue.get(i);
+			ret = ret + ", " + nb.point.id;
+		}
+		System.out.println("k-NN computed by linear_scan!");
+		return ret;
 	}
 
 	public static void main(String args[]){
