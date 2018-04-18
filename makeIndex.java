@@ -22,11 +22,6 @@ class Pnt {
 	private int id;
 	private double x;
 	private double y;
-
-	public static double round(double num, int precision){
-		double scale = Math.pow(10, precision);
-		return (double) Math.round(num * scale) / scale;
-	}
 	 
 	/**
 	 * @param x: x-axis
@@ -34,8 +29,8 @@ class Pnt {
 	 */
 	public Pnt(int id, double x, double y) {
 		this.id = id;
-		this.x = round(x, 1);
-		this.y = round(y, 1);
+		this.x = x;
+		this.y = y;
 	}
 
 	/**
@@ -111,6 +106,14 @@ public class makeIndex {
 			//return a.compareTo(b);	
 		}
 	}
+
+	public static boolean valid_line(String line){
+		double max_x = 90.0;
+		double min_x = -90.0;
+		String[] col = line.split("\t");
+		double x = Double.parseDouble(col[2]);
+		return (x <= max_x && x >= min_x);
+	}
 	
 	public static void duplicate_elimination(String data_path, String data_path_new){
 		System.out.println("Calling duplicate_elimination!");
@@ -121,7 +124,9 @@ public class makeIndex {
 			try (BufferedReader reader = new BufferedReader(fileReader)) {
 				String line = null;
 				while ((line = reader.readLine()) != null) {
-					lines.add(line);
+					if (valid_line(line)){	/* remove invalid locations */
+						lines.add(line);
+					}
 				}
 			}
 		} catch (IOException ex) {}
@@ -209,10 +214,14 @@ public class makeIndex {
 		System.out.println("File read!");
 
 		// find max box
-		double x_min = round(Collections.min(xs), 1);
-		double x_max = round(Collections.max(xs), 1);
-		double y_min = round(Collections.min(ys), 1);
-		double y_max = round(Collections.max(ys), 1);
+		double x_min = Collections.min(xs);
+		double x_max = Collections.max(xs);
+		double y_min = Collections.min(ys);
+		double y_max = Collections.max(ys);
+		System.out.println("x_min: " + x_min);
+		System.out.println("x_max: " + x_max);
+		System.out.println("y_min: " + y_min);
+		System.out.println("y_max: " + y_max);
 		
 		// create Gri index
 		double cell_x = (x_max - x_min) / n;
