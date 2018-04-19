@@ -1,3 +1,14 @@
+/*
+
+Usage: java getResults X Y DATA_PATH_NEW INDEX_PATH K N
+
+java getResults X Y /Users/alog1024/Desktop/loc.txt /Users/alog1024/Desktop/index.txt K N
+  	
+java getResults X Y /Users/alog1024/Desktop/loc.txt /Users/alog1024/Desktop/index.txt K N		
+
+*/
+
+
 import java.util.*;
 import java.io.*;
 
